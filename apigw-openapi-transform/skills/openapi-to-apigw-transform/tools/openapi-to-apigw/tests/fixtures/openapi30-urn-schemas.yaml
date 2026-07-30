@@ -1,0 +1,83 @@
+openapi: 3.0.0
+info:
+  title: Webhook Notifications (Schema Name Edge Cases)
+  version: 1.0.0
+servers:
+  - url: /api/v4.0
+paths:
+  /event-subscriptions:
+    post:
+      summary: Create Event Subscription
+      requestBody:
+        content:
+          application/jwt:
+            schema:
+              type: string
+              format: base64
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventSubscriptionResponse1"
+  /events:
+    post:
+      summary: Create Events
+      requestBody:
+        content:
+          application/jwt:
+            schema:
+              type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventPolling1"
+components:
+  schemas:
+    # URN-style names: colons, dots, hyphens
+    "urn:example:org:webhooks:events:resource-update":
+      type: object
+      additionalProperties: false
+      properties:
+        subject:
+          type: object
+          properties:
+            subject_type:
+              type: string
+            http://webhooks.example.org/rid:
+              type: string
+            http://webhooks.example.org/rty:
+              type: string
+            http://webhooks.example.org/rlk:
+              type: array
+              items:
+                type: object
+                properties:
+                  link:
+                    type: string
+                  version:
+                    type: integer
+                    format: int32
+    EventSubscriptionResponse1:
+      type: object
+      properties:
+        EventSubscriptionId:
+          type: string
+          readOnly: true
+        CallbackUrl:
+          type: string
+          example: https://example.com/callback
+    EventPolling1:
+      type: object
+      properties:
+        maxEvents:
+          type: integer
+          format: int32
+          default: 10
+        returnImmediately:
+          type: boolean
+          default: false

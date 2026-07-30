@@ -1,0 +1,267 @@
+openapi: 3.0.0
+info:
+  title: Inventory Management API (Fixture)
+  version: 4.0.0
+servers:
+  - url: /api/v4.0/inventory
+security:
+  - ServiceOAuth2:
+      - items
+components:
+  securitySchemes:
+    ServiceOAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://authserver.example/token
+          scopes:
+            items: Ability to read items
+    UserOAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://authserver.example/auth
+          tokenUrl: https://authserver.example/token
+          scopes:
+            items: Ability to read items
+  responses:
+    400Error:
+      description: Bad request
+      headers:
+        x-correlation-id:
+          description: An RFC4122 UID used as a correlation id
+          required: true
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse1"
+        application/jose+jwe:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse1"
+  schemas:
+    CreateItemRequest1:
+      type: object
+      properties:
+        Data:
+          $ref: "#/components/schemas/ItemData1"
+    ItemData1:
+      type: object
+      properties:
+        Permissions:
+          type: array
+          items:
+            type: string
+            enum:
+              - ReadItemsBasic
+              - ReadItemsDetail
+              - ReadInventory
+    ErrorResponse1:
+      type: object
+      properties:
+        Code:
+          type: string
+        Errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ErrorDetail1"
+    ErrorDetail1:
+      type: object
+      properties:
+        ErrorCode:
+          type: string
+        Message:
+          type: string
+    # Schema names with underscores — must be sanitized
+    CurrencyAmount_SimpleType:
+      type: string
+      pattern: "^\\d{1,13}\\.\\d{1,5}$"
+    PricingOrCostAmount_0:
+      type: object
+      properties:
+        Amount:
+          $ref: "#/components/schemas/CurrencyAmount_SimpleType"
+        Currency:
+          type: string
+          pattern: "^[A-Z]{3,3}$"
+    PricingOrCostAmount_1:
+      type: object
+      properties:
+        Amount:
+          $ref: "#/components/schemas/CurrencyAmount_SimpleType"
+    # Collision pair: different names that sanitize to the same alphanumeric
+    ItemRate1_0:
+      type: object
+      properties:
+        Rate:
+          type: string
+    Item_Rate1_0:
+      type: object
+      properties:
+        Rate:
+          type: string
+          deprecated: true
+    ItemDetail6:
+      type: object
+      properties:
+        ItemId:
+          type: string
+          readOnly: true
+        Status:
+          type: string
+          nullable: true
+          example: Active
+        StatusUpdateDateTime:
+          type: string
+          format: date-time
+          readOnly: true
+        Currency:
+          type: string
+        ItemType:
+          type: string
+          x-namespaced-enum:
+            - Physical
+            - Digital
+        ItemSubType:
+          type: string
+          discriminator:
+            propertyName: ItemSubType
+paths:
+  /item-requests:
+    post:
+      summary: Create Item Request
+      operationId: CreateItemRequest
+      security:
+        - ServiceOAuth2:
+            - items
+      parameters:
+        - name: x-auth-date
+          in: header
+          description: Date header
+          schema:
+            type: string
+            pattern: >-
+              ^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), \d{2}
+              (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4}
+              \d{2}:\d{2}:\d{2} (GMT|UTC)$
+        - name: x-customer-ip-address
+          in: header
+          schema:
+            type: string
+        - name: x-correlation-id
+          in: header
+          schema:
+            type: string
+        - name: x-idempotency-key
+          in: header
+          required: true
+          schema:
+            type: string
+            maxLength: 40
+        - name: x-jws-signature
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json; charset=utf-8:
+            schema:
+              $ref: "#/components/schemas/CreateItemRequest1"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateItemRequest1"
+          application/jose+jwe:
+            schema:
+              $ref: "#/components/schemas/CreateItemRequest1"
+      responses:
+        "201":
+          description: Created
+          headers:
+            x-correlation-id:
+              description: Correlation ID
+              required: true
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateItemRequest1"
+            application/jose+jwe:
+              schema:
+                $ref: "#/components/schemas/CreateItemRequest1"
+        "400":
+          $ref: "#/components/responses/400Error"
+  /items:
+    get:
+      summary: Get Items
+      operationId: GetItems
+      security:
+        - UserOAuth2:
+            - items
+      parameters:
+        - name: x-correlation-id
+          in: header
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Items list
+          headers:
+            x-correlation-id:
+              description: Correlation ID
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Data:
+                    type: object
+                    properties:
+                      Item:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/ItemDetail6"
+            application/jose+jwe:
+              schema:
+                type: object
+        "400":
+          $ref: "#/components/responses/400Error"
+  /items/{ItemId}:
+    get:
+      summary: Get Item by ID
+      operationId: GetItem
+      parameters:
+        - name: ItemId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Item detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemDetail6"
+  /items/{ItemId}/pricing:
+    get:
+      summary: Get Pricing
+      operationId: GetItemPricing
+      parameters:
+        - name: ItemId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Pricing
+          content:
+            application/json:
+              schema:
+                type: object

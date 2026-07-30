@@ -1,0 +1,85 @@
+openapi: 3.0.0
+info:
+  title: Binary Content Types Test
+  version: 1.0.0
+paths:
+  /upload:
+    post:
+      summary: Upload file
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                description:
+                  type: string
+              required:
+                - file
+      responses:
+        "200":
+          description: Uploaded
+  /download:
+    get:
+      summary: Download binary file
+      responses:
+        "200":
+          description: File content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+  /image:
+    get:
+      summary: Get image
+      responses:
+        "200":
+          description: Image
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+  /report:
+    get:
+      summary: Download PDF report
+      responses:
+        "200":
+          description: PDF report
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+  /archive:
+    get:
+      summary: Download gzip archive
+      responses:
+        "200":
+          description: Archive
+          content:
+            application/gzip:
+              schema:
+                type: string
+                format: binary
+  /data:
+    get:
+      summary: Regular JSON endpoint
+      responses:
+        "200":
+          description: JSON data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string

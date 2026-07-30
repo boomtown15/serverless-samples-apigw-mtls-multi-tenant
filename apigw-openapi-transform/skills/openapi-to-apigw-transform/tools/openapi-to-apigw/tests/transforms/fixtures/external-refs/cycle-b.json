@@ -1,0 +1,1 @@
+{ "definitions": { "B": { "type": "object", "properties": { "back": { "$ref": "./cycle-a.json#/definitions/A" } } } } }

@@ -1,0 +1,1 @@
+{ "definitions": { "D": { "type": "object", "properties": { "next": { "$ref": "./8.json#/definitions/D" } } } } }

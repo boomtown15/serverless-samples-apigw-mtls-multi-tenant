@@ -1,0 +1,97 @@
+swagger: "2.0"
+info:
+  title: Uber API
+  version: "1.0.0"
+host: api.uber.com
+schemes:
+  - https
+basePath: /v1
+securityDefinitions:
+  apikey:
+    type: apiKey
+    name: server_token
+    in: query
+produces:
+  - application/json
+paths:
+  /products:
+    get:
+      summary: Product Types
+      parameters:
+        - name: latitude
+          in: query
+          description: Latitude component
+          required: true
+          type: number
+          format: double
+        - name: longitude
+          in: query
+          description: Longitude component
+          required: true
+          type: number
+          format: double
+      security:
+        - apikey: []
+      responses:
+        "200":
+          description: Products list
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Product"
+  /estimates/price:
+    get:
+      summary: Price Estimates
+      parameters:
+        - name: start_latitude
+          in: query
+          required: true
+          type: number
+          format: double
+      responses:
+        "200":
+          description: Price estimates
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/PriceEstimate"
+  /me:
+    get:
+      summary: User Profile
+      security:
+        - apikey: []
+      responses:
+        "200":
+          description: Profile
+          schema:
+            $ref: "#/definitions/Profile"
+definitions:
+  Product:
+    type: object
+    properties:
+      product_id:
+        type: string
+        description: Unique identifier
+      capacity:
+        type: integer
+        format: int32
+  PriceEstimate:
+    type: object
+    properties:
+      low_estimate:
+        type: number
+        format: decimal
+      high_estimate:
+        type: number
+        format: decimal
+      surge_multiplier:
+        type: number
+        format: double
+  Profile:
+    type: object
+    properties:
+      customer_uuid:
+        type: string
+        format: uuid
+      email:
+        type: string
