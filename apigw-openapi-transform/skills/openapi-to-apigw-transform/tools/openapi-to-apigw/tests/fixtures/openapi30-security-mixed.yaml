@@ -1,0 +1,138 @@
+openapi: 3.0.0
+info:
+  title: Mixed Security Schemes Test
+  version: 1.0.0
+servers:
+  - url: https://api.example.com
+security:
+  - BearerAuth: []
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.example.com/auth
+          tokenUrl: https://auth.example.com/token
+          scopes:
+            read: Read access
+            write: Write access
+    OpenID:
+      type: openIdConnect
+      openIdConnectUrl: https://auth.example.com/.well-known/openid-configuration
+    NativeApiKey:
+      type: apiKey
+      name: x-api-key
+      in: header
+    QueryApiKey:
+      type: apiKey
+      name: server_token
+      in: query
+    CustomHeaderApiKey:
+      type: apiKey
+      name: api-key
+      in: header
+    BasicAuth:
+      type: http
+      scheme: basic
+    CookieAuth:
+      type: apiKey
+      name: session
+      in: cookie
+paths:
+  /bearer-protected:
+    get:
+      summary: Protected by Bearer JWT
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: OK
+  /oauth2-protected:
+    get:
+      summary: Protected by OAuth2
+      security:
+        - OAuth2:
+            - read
+      responses:
+        "200":
+          description: OK
+    post:
+      summary: Write with OAuth2
+      security:
+        - OAuth2:
+            - read
+            - write
+      responses:
+        "201":
+          description: Created
+  /openid-protected:
+    get:
+      summary: Protected by OpenID Connect
+      security:
+        - OpenID: []
+      responses:
+        "200":
+          description: OK
+  /apikey-native:
+    get:
+      summary: Native x-api-key
+      security:
+        - NativeApiKey: []
+      responses:
+        "200":
+          description: OK
+  /apikey-query:
+    get:
+      summary: API key in query param (non-standard)
+      security:
+        - QueryApiKey: []
+      responses:
+        "200":
+          description: OK
+  /apikey-custom-header:
+    get:
+      summary: API key in custom header (non-standard)
+      security:
+        - CustomHeaderApiKey: []
+      responses:
+        "200":
+          description: OK
+  /basic-auth:
+    get:
+      summary: HTTP Basic auth
+      security:
+        - BasicAuth: []
+      responses:
+        "200":
+          description: OK
+  /cookie-auth:
+    get:
+      summary: Cookie-based auth
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: session
+          in: cookie
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /inherited-security:
+    get:
+      summary: Inherits root-level BearerAuth security
+      responses:
+        "200":
+          description: OK
+  /public:
+    get:
+      summary: Explicitly no security
+      security: []
+      responses:
+        "200":
+          description: OK

@@ -1,0 +1,60 @@
+openapi: 3.0.0
+info:
+  title: Multi-rule integration fixture
+  version: 1.0.0
+paths:
+  /items:
+    get:
+      operationId: listItems
+      parameters:
+        - name: filter[tag]
+          in: query
+          schema:
+            type: string
+        - name: createdAt[$gte]
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema: &sharedItem
+                type: object
+                properties:
+                  id:
+                    type: string
+  /items/{id}:
+    get:
+      operationId: getItem
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema: *sharedItem
+  /widgets:
+    get:
+      operationId: listWidgets
+      responses:
+        '200':
+          description: ok
+  /widgets?kind=special:
+    get:
+      operationId: listSpecialWidgets
+      responses:
+        '200':
+          description: ok
+  /orphan?tag=x:
+    get:
+      operationId: listOrphan
+      responses:
+        '200':
+          description: ok

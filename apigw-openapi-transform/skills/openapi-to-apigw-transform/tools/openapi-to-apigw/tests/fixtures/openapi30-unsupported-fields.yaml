@@ -1,0 +1,174 @@
+openapi: 3.0.0
+info:
+  title: Unsupported Fields Test
+  version: 1.0.0
+paths:
+  /items:
+    get:
+      summary: Get items
+      parameters:
+        - name: filter
+          in: query
+          required: false
+          description: Filter expression
+          schema:
+            type: string
+          # Unsupported param fields
+          style: form
+          explode: true
+          allowReserved: true
+          allowEmptyValue: true
+        - name: session
+          in: cookie
+          description: Session cookie (should be removed)
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Item"
+          headers:
+            x-request-id:
+              description: Request tracking ID
+              schema:
+                type: string
+            x-rate-limit:
+              description: Rate limit
+              schema:
+                type: integer
+        # Primitive response type — must be wrapped
+        "204":
+          description: Success message
+          content:
+            application/json:
+              schema:
+                type: string
+    post:
+      summary: Create item
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewItem"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /items/{id}:
+    get:
+      summary: Get item by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Item detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+components:
+  responses:
+    InternalError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Item:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          example: Widget
+        description:
+          type: string
+          deprecated: true
+        status:
+          type: string
+          default: active
+          nullable: true
+        category:
+          type: string
+          discriminator:
+            propertyName: category
+        priority:
+          type: number
+          format: int32
+        score:
+          type: number
+          format: int64
+        price:
+          type: number
+          format: decimal
+        threshold:
+          type: number
+          exclusiveMinimum: 0
+        metadata:
+          type: object
+          examples:
+            - key: value
+    NewItem:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+    # Vendor extension acting as enum
+    PaymentStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          x-namespaced-enum:
+            - pending
+            - completed
+            - failed
+        channel:
+          type: string
+          x-custom-values:
+            - web
+            - mobile
+            - api
+          enum:
+            - web
+            - mobile
+            - api
+    # x-* extensions on various objects
+    VendorExtended:
+      type: object
+      x-internal: true
+      x-deprecated-since: "2024-01-01"
+      properties:
+        value:
+          type: string
+          x-field-level-ext: metadata
